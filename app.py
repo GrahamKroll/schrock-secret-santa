@@ -9,6 +9,7 @@ production (DATABASE_URL set, e.g. on Render). A small abstraction layer hides
 the driver differences.
 """
 import os
+import random
 import time
 
 from dotenv import load_dotenv
@@ -74,23 +75,34 @@ def db_execute(conn, sql, params=()):
     return conn.execute(sql, params)
 
 
-# Pre-drawn pairings, embedded so a fresh production deployment is fully seeded
-# without needing the local SQLite file. (Never printed or logged.)
-PRODUCTION_PAIRINGS = {
-    "Callie": "Jason",
-    "Graham": "Callie",
-    "Jason": "Ryan",
-    "Ryan": "Sara",
-    "Sara": "Sophie",
-    "Sophie": "Graham",
-}
+# Participants for the Secret Santa exchange. Pairings are drawn randomly on the
+# first production seed (see init_production_db); never hard-coded.
+PARTICIPANTS = ["Jason", "Sara", "Callie", "Ryan", "Sophie", "Graham"]
+
+
+def _draw_circular(names):
+    """Return a dict {giver: giftee} using a random circular assignment.
+
+    Shuffles the list and assigns person[i] -> person[(i + 1) % n], which can
+    never yield a self-assignment; validated and retried defensively.
+    """
+    people = list(names)
+    while True:
+        random.shuffle(people)
+        n = len(people)
+        pairing = {people[i]: people[(i + 1) % n] for i in range(n)}
+        if all(giver != giftee for giver, giftee in pairing.items()):
+            return pairing
 
 
 def init_production_db():
     """Create tables and seed participants in the PostgreSQL database.
 
-    Idempotent: safe to run on every startup. Existing rows (and any PINs /
-    wish lists already saved) are preserved. PINs stay NULL until first login.
+    Idempotent: safe to run on every startup. On a fresh deployment (any
+    participant missing a giftee) a random circular draw is performed and
+    persisted. On subsequent startups all giftees are already set, so nothing
+    is changed. Existing rows (PINs / wish lists) are always preserved, and the
+    pairing is never printed or logged. PINs stay NULL until first login.
     """
     conn = get_db()
     try:
@@ -116,13 +128,28 @@ def init_production_db():
             )
             """
         )
-        for giver, giftee in PRODUCTION_PAIRINGS.items():
+        # Insert all participants with no giftee yet; preserve existing rows.
+        for name in PARTICIPANTS:
             cur.execute(
                 "INSERT INTO participants (name, pin_hash, giftee, wishlist) "
-                "VALUES (%s, NULL, %s, '') "
+                "VALUES (%s, NULL, NULL, '') "
                 "ON CONFLICT (name) DO NOTHING",
-                (giver, giftee),
+                (name,),
             )
+
+        # Determine whether a draw is still needed (fresh DB).
+        cur.execute("SELECT name FROM participants WHERE giftee IS NULL")
+        undrawn = [row["name"] for row in cur.fetchall()]
+
+        if undrawn:
+            # Draw over the full participant set so the circle is complete.
+            pairing = _draw_circular(PARTICIPANTS)
+            for giver, giftee in pairing.items():
+                cur.execute(
+                    "UPDATE participants SET giftee = %s WHERE name = %s",
+                    (giftee, giver),
+                )
+
         conn.commit()
     finally:
         conn.close()
