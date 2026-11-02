@@ -14,7 +14,6 @@
       --gold: #f3c969;
       --gold-bright: #ffd97d;
       --cream: #fff8ee;
-      --text: #f4efe6;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -53,7 +52,7 @@
     }
     .subtitle { text-align: center; color: #d8ead9; margin: 0 0 22px; font-size: 0.95rem; }
     label { display: block; font-weight: 600; margin: 16px 0 6px; color: var(--gold-bright); }
-    select, input[type="password"], textarea {
+    select, input[type="password"] {
       width: 100%;
       padding: 12px 14px;
       border-radius: 10px;
@@ -62,16 +61,27 @@
       color: #14281d;
       font-size: 1rem;
     }
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--green-light);
+      background: var(--cream);
+      color: #14281d;
+      font-size: 1rem;
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
     select:focus, input:focus, textarea:focus {
       outline: none;
       border-color: var(--gold);
       box-shadow: 0 0 0 3px rgba(243,201,105,0.35);
     }
-    textarea { min-height: 120px; resize: vertical; font-family: inherit; }
     .hint { font-size: 0.82rem; color: #c7dcc9; margin-top: 6px; }
     button {
       width: 100%;
-      margin-top: 20px;
+      margin-top: 16px;
       padding: 13px;
       border: none;
       border-radius: 10px;
@@ -80,274 +90,513 @@
       font-size: 1.05rem;
       font-weight: 700;
       cursor: pointer;
-      letter-spacing: 0.3px;
       transition: transform 0.05s ease, filter 0.15s ease;
     }
-    button:hover { filter: brightness(1.08); }
+    button:hover  { filter: brightness(1.08); }
     button:active { transform: translateY(1px); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .msg { margin-top: 14px; padding: 10px 12px; border-radius: 9px; font-size: 0.92rem; display: none; }
-    .msg.error { display: block; background: rgba(193,18,31,0.18); border: 1px solid var(--red); color: #ffd7da; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
+    .btn-gold {
+      background: linear-gradient(180deg, var(--gold-bright), #d4a820);
+      color: #14281d;
+    }
+    .msg { margin-top: 12px; padding: 10px 12px; border-radius: 9px; font-size: 0.92rem; display: none; }
+    .msg.error   { display: block; background: rgba(193,18,31,0.18); border: 1px solid var(--red); color: #ffd7da; }
     .msg.success { display: block; background: rgba(20,107,58,0.3); border: 1px solid var(--gold); color: var(--gold-bright); }
     .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .logout { color: var(--gold-bright); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
     .logout:hover { text-decoration: underline; }
     .section {
-      margin-top: 22px;
-      padding: 18px;
+      margin-top: 22px; padding: 18px;
       border-radius: 12px;
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(243,201,105,0.35);
     }
-    .section h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--gold-bright); }
+    .section h2 { margin: 0 0 14px; font-size: 1.15rem; color: var(--gold-bright); }
     .giftee-name { color: #fff; }
-    .wishlinks { list-style: none; padding: 0; margin: 0; }
-    .wishlinks li { margin: 8px 0; }
-    .wishlinks a {
-      color: var(--gold-bright);
-      text-decoration: none;
-      word-break: break-all;
-      border-bottom: 1px dotted var(--gold);
-    }
-    .wishlinks a:hover { color: #fff; }
-    .wishlinks .plain { color: #e8f3e9; }
-    .empty { color: #cfe3d1; font-style: italic; }
+    .empty { color: #cfe3d1; font-style: italic; font-size: 0.9rem; }
     .hidden { display: none; }
-    .flake { position: fixed; top: -10px; color: #fff; opacity: 0.25; pointer-events: none; animation: fall linear infinite; }
+
+    /* ── Slot-machine reel ─────────────────────── */
+    .wheel-header { text-align: center; margin-bottom: 6px; }
+    .wheel-header p { color: #d8ead9; margin: 0 0 14px; font-size: 0.95rem; }
+    .reel-window {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.35);
+      border: 2px solid rgba(243,201,105,0.5);
+      user-select: none;
+    }
+    .reel-window::before,
+    .reel-window::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; height: 68px;
+      z-index: 2; pointer-events: none;
+    }
+    .reel-window::before { top: 0;    background: linear-gradient(to bottom, rgba(6,48,25,0.95) 20%, transparent); }
+    .reel-window::after  { bottom: 0; background: linear-gradient(to top,   rgba(6,48,25,0.95) 20%, transparent); }
+    .reel-highlight {
+      position: absolute; top: 60px; left: 0; right: 0; height: 60px;
+      border-top: 2px solid var(--gold);
+      border-bottom: 2px solid var(--gold);
+      background: rgba(243,201,105,0.06);
+      z-index: 1; pointer-events: none;
+    }
+    .reel-items {
+      position: absolute; top: 0; left: 0; right: 0;
+      display: flex; flex-direction: column;
+    }
+    .reel-item {
+      height: 60px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .reel-item.prev-item { opacity: 0.3; font-size: 1.05rem; color: var(--cream); }
+    .reel-item.curr-item { opacity: 1;   font-size: 1.5rem;  color: var(--gold-bright);
+                           text-shadow: 0 0 14px rgba(255,217,125,0.7); z-index: 3; }
+    .reel-item.next-item { opacity: 0.3; font-size: 1.05rem; color: var(--cream); }
+
+    @keyframes land {
+      0%   { transform: scaleY(1.2);  }
+      55%  { transform: scaleY(0.93); }
+      100% { transform: scaleY(1);    }
+    }
+    .curr-item.landed { animation: land 0.32s cubic-bezier(.36,.07,.19,.97); }
+
+    .reveal-msg {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--gold-bright);
+      min-height: 1.5em;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+
+    /* ── Link preview cards ─────────────────────── */
+    .link-cards { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+    .link-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(243,201,105,0.3);
+      border-radius: 12px;
+      padding: 10px 14px 10px 10px;
+    }
+    .link-thumb-wrap {
+      flex-shrink: 0; width: 78px; height: 78px;
+      border-radius: 9px; overflow: hidden;
+      background: rgba(0,0,0,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem;
+    }
+    .link-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .link-info { flex: 1; min-width: 0; }
+    .link-title {
+      font-size: 0.87rem; font-weight: 600; color: var(--cream);
+      margin-bottom: 9px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .link-open {
+      display: inline-block; padding: 5px 13px;
+      border-radius: 7px;
+      background: linear-gradient(180deg, var(--gold-bright), #d4a820);
+      color: #14281d; font-size: 0.82rem; font-weight: 700; text-decoration: none;
+    }
+    .link-open:hover { filter: brightness(1.08); }
+    .link-plain { color: #e8f3e9; font-size: 0.92rem; margin: 4px 0; }
+
+    .link-skeleton { display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(243,201,105,0.12);
+      border-radius: 12px; padding: 10px; }
+    .skel-img  { width: 78px; height: 78px; border-radius: 9px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    .skel-lines { flex: 1; }
+    .skel-line { height: 11px; border-radius: 6px; background: rgba(255,255,255,0.1); margin-bottom: 8px; }
+    .skel-line.short { width: 45%; }
+
+    /* snowflakes */
+    .flake { position: fixed; top: -12px; color: #fff; opacity: 0.22; pointer-events: none; animation: fall linear infinite; }
     @keyframes fall { to { transform: translateY(105vh); } }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <!-- State 1: Login -->
-      <div id="loginView">
-        <h1>Schrock Secret Santa 🎅</h1>
-        <p class="subtitle">Sign in to see who you're buying for 🎁</p>
+<div class="wrap">
+  <div class="card">
 
-        <label for="nameSelect">Who are you?</label>
-        <select id="nameSelect">
-          <option value="">Loading…</option>
-        </select>
+    <!-- ── STATE 1: LOGIN ──────────────────────── -->
+    <div id="loginView">
+      <h1>Schrock Secret Santa 🎅</h1>
+      <p class="subtitle">Sign in to find out who you're buying for 🎁</p>
 
-        <label for="pinInput">Your PIN</label>
-        <input id="pinInput" type="password" maxlength="4" inputmode="numeric"
-               autocomplete="off" placeholder="••••" />
-        <p class="hint">First time? Pick any 4-digit PIN — you'll use it to come back.</p>
+      <label for="nameSelect">Who are you?</label>
+      <select id="nameSelect">
+        <option value="">Select your name…</option>
+        {% for n in names %}<option value="{{ n }}">{{ n }}</option>
+        {% endfor %}
+      </select>
 
-        <button id="loginBtn">Sign In</button>
-        <div id="loginMsg" class="msg"></div>
+      <label for="pinInput">PIN</label>
+      <input id="pinInput" type="password" maxlength="20"
+             autocomplete="off" placeholder="Enter your PIN" />
+
+      <button id="loginBtn">Sign In 🎄</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <!-- ── STATE 2: WHEEL SPIN ─────────────────── -->
+    <div id="spinView" class="hidden">
+      <div class="topbar">
+        <h1 id="spinGreeting" style="font-size:1.5rem;margin:0;">Hi! 🎄</h1>
+        <a class="logout" href="/logout">Log out</a>
       </div>
 
-      <!-- State 2: Logged in -->
-      <div id="appView" class="hidden">
-        <div class="topbar">
-          <h1 id="greeting" style="font-size:1.5rem;margin:0;text-align:left;">Hi! 🎄</h1>
-          <a class="logout" href="/logout">Log out</a>
-        </div>
+      <div class="wheel-header">
+        <p>Spin the wheel to reveal who you're buying for!</p>
+      </div>
 
-        <div class="section">
-          <h2>You're buying for <span class="giftee-name" id="gifteeName"></span></h2>
-          <ul class="wishlinks" id="gifteeWishlist"></ul>
+      <div class="reel-window">
+        <div class="reel-highlight"></div>
+        <div class="reel-items">
+          <div class="reel-item prev-item" id="prevItem">—</div>
+          <div class="reel-item curr-item" id="currItem">—</div>
+          <div class="reel-item next-item" id="nextItem">—</div>
         </div>
+      </div>
 
-        <div class="section">
-          <h2>Your Wish List</h2>
-          <p class="hint" style="margin-top:-6px;">Your Secret Santa sees this. One link (or idea) per line.</p>
-          <textarea id="ownWishlist" placeholder="https://example.com/thing-i-want&#10;Another idea…"></textarea>
-          <button id="saveBtn">Save Wish List</button>
-          <div id="saveMsg" class="msg"></div>
-        </div>
+      <div class="reveal-msg" id="revealMsg"></div>
+      <button id="spinBtn" class="btn-gold">Spin! 🎲</button>
+      <button id="continueBtn" class="hidden" style="margin-top:10px;">See Their Wish List →</button>
+    </div>
+
+    <!-- ── STATE 3: DASHBOARD ──────────────────── -->
+    <div id="appView" class="hidden">
+      <div class="topbar">
+        <h1 id="appGreeting" style="font-size:1.5rem;margin:0;">Hi! 🎄</h1>
+        <a class="logout" href="/logout">Log out</a>
+      </div>
+
+      <div class="section">
+        <h2>You're buying for <span class="giftee-name" id="gifteeName"></span></h2>
+        <ul class="link-cards" id="gifteeWishlist"></ul>
+      </div>
+
+      <div class="section">
+        <h2>Your Wish List</h2>
+        <p class="hint" style="margin-top:-6px;">Your Secret Santa sees this. One link (or idea) per line.</p>
+        <textarea id="ownWishlist" placeholder="https://example.com/something&#10;Another idea…"></textarea>
+        <button id="saveBtn">Save Wish List</button>
+        <div id="saveMsg" class="msg"></div>
       </div>
     </div>
+
   </div>
+</div>
 
-  <script>
-    // Decorative snowflakes
-    (function () {
-      const flakes = ["❄", "❅", "❆", "*"];
-      for (let i = 0; i < 18; i++) {
-        const s = document.createElement("div");
-        s.className = "flake";
-        s.textContent = flakes[Math.floor(Math.random() * flakes.length)];
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.fontSize = (10 + Math.random() * 18) + "px";
-        s.style.animationDuration = (6 + Math.random() * 9) + "s";
-        s.style.animationDelay = (Math.random() * 8) + "s";
-        document.body.appendChild(s);
-      }
-    })();
-
-    const loginView = document.getElementById("loginView");
-    const appView = document.getElementById("appView");
-    const nameSelect = document.getElementById("nameSelect");
-    const pinInput = document.getElementById("pinInput");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginMsg = document.getElementById("loginMsg");
-    const greeting = document.getElementById("greeting");
-    const gifteeName = document.getElementById("gifteeName");
-    const gifteeWishlist = document.getElementById("gifteeWishlist");
-    const ownWishlist = document.getElementById("ownWishlist");
-    const saveBtn = document.getElementById("saveBtn");
-    const saveMsg = document.getElementById("saveMsg");
-
-    let countdownTimer = null;
-
-    function showMsg(el, text, kind) {
-      el.textContent = text;
-      el.className = "msg " + kind;
+<script>
+  // Snowflakes
+  (function () {
+    const fl = ["❄","❅","❆","*"];
+    for (let i = 0; i < 18; i++) {
+      const s = document.createElement("div");
+      s.className = "flake";
+      s.textContent = fl[Math.floor(Math.random() * fl.length)];
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.fontSize = (10 + Math.random() * 18) + "px";
+      s.style.animationDuration = (6 + Math.random() * 9) + "s";
+      s.style.animationDelay   = (Math.random() * 8) + "s";
+      document.body.appendChild(s);
     }
-    function clearMsg(el) {
-      el.textContent = "";
-      el.className = "msg";
-    }
+  })();
 
-    async function loadNames() {
-      try {
-        const res = await fetch("/names");
-        const list = await res.json();
-        nameSelect.innerHTML = '<option value="">Select your name…</option>';
-        list.forEach(function (n) {
-          const opt = document.createElement("option");
-          opt.value = n;
-          opt.textContent = n;
-          nameSelect.appendChild(opt);
-        });
-      } catch (e) {
-        nameSelect.innerHTML = '<option value="">Could not load names</option>';
-      }
-    }
+  // ── Refs ──────────────────────────────────────
+  const loginView    = document.getElementById("loginView");
+  const spinView     = document.getElementById("spinView");
+  const appView      = document.getElementById("appView");
 
-    function linkify(text) {
-      gifteeWishlist.innerHTML = "";
-      const lines = (text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
-      if (lines.length === 0) {
-        const li = document.createElement("li");
-        li.className = "empty";
-        li.textContent = "No gift ideas yet — check back soon! 🎁";
-        gifteeWishlist.appendChild(li);
+  const nameSelect   = document.getElementById("nameSelect");
+  const pinInput     = document.getElementById("pinInput");
+  const loginBtn     = document.getElementById("loginBtn");
+  const loginMsg     = document.getElementById("loginMsg");
+
+  const spinGreeting = document.getElementById("spinGreeting");
+  const prevItem     = document.getElementById("prevItem");
+  const currItem     = document.getElementById("currItem");
+  const nextItem     = document.getElementById("nextItem");
+  const revealMsg    = document.getElementById("revealMsg");
+  const spinBtn      = document.getElementById("spinBtn");
+  const continueBtn  = document.getElementById("continueBtn");
+
+  const appGreeting  = document.getElementById("appGreeting");
+  const gifteeName   = document.getElementById("gifteeName");
+  const gifteeWishlist = document.getElementById("gifteeWishlist");
+  const ownWishlist  = document.getElementById("ownWishlist");
+  const saveBtn      = document.getElementById("saveBtn");
+  const saveMsg      = document.getElementById("saveMsg");
+
+  // ── State ─────────────────────────────────────
+  let allNames     = [];
+  let gifteeData   = null;   // holds full /me response after login
+  let currentIndex = 0;
+  let isSpinning   = false;
+  let hasRevealed  = false;
+  let countdownTimer = null;
+
+  // ── Helpers ───────────────────────────────────
+  function showMsg(el, text, kind) { el.textContent = text; el.className = "msg " + kind; }
+  function clearMsg(el)            { el.textContent = "";   el.className = "msg"; }
+  function showView(v) {
+    [loginView, spinView, appView].forEach(el => el.classList.add("hidden"));
+    v.classList.remove("hidden");
+  }
+
+  // ── Load names for dropdown ───────────────────
+  function loadNames() {
+    // Names are filled in by the server when the page loads
+    loginBtn.disabled = nameSelect.options.length <= 1;
+  }
+
+  // ── Reel helpers ──────────────────────────────
+  function getName(i) {
+    return allNames[((i % allNames.length) + allNames.length) % allNames.length];
+  }
+  function updateReel(index) {
+    prevItem.textContent = getName(index - 1);
+    currItem.textContent = getName(index);
+    nextItem.textContent = getName(index + 1);
+    currentIndex = index;
+  }
+
+  // ── Spin (lands on giftee) ────────────────────
+  function startSpin() {
+    if (isSpinning || (gifteeData && gifteeData.revealed)) return;
+    isSpinning    = true;
+    hasRevealed   = false;
+    spinBtn.disabled = true;
+    continueBtn.classList.add("hidden");
+    revealMsg.textContent = "";
+    currItem.classList.remove("landed");
+
+    // Find where giftee sits in allNames
+    const gifteeIndex = allNames.indexOf(gifteeData.giftee);
+
+    // Total steps: several full loops, landing exactly on giftee
+    const fullLoops = 4 + Math.floor(Math.random() * 4);
+    const totalSteps = fullLoops * allNames.length +
+      ((gifteeIndex - currentIndex + allNames.length) % allNames.length);
+
+    let step = 0;
+    function tick() {
+      updateReel(currentIndex + 1);
+      step++;
+
+      if (step >= totalSteps) {
+        // Landed on giftee
+        isSpinning = true; // keep true until animation done
+        void currItem.offsetWidth;
+        currItem.classList.add("landed");
+        currItem.addEventListener("animationend", () => {
+          currItem.classList.remove("landed");
+          isSpinning  = false;
+          hasRevealed = true;
+          revealMsg.textContent = "🎉 You're buying for " + gifteeData.giftee + "!";
+          continueBtn.classList.remove("hidden");
+          spinBtn.classList.add("hidden");
+          gifteeData.revealed = true;
+          fetch("/me/reveal", { method: "POST" }).catch(() => {});
+        }, { once: true });
         return;
       }
-      lines.forEach(function (line) {
-        const li = document.createElement("li");
-        if (/^https?:\/\//i.test(line)) {
-          const a = document.createElement("a");
-          a.href = line;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.textContent = line.length > 50 ? line.slice(0, 50) + "…" : line;
-          li.appendChild(a);
-        } else {
-          const span = document.createElement("span");
-          span.className = "plain";
-          span.textContent = line;
-          li.appendChild(span);
-        }
-        gifteeWishlist.appendChild(li);
+
+      const progress = step / totalSteps;
+      const delay = progress < 0.55
+        ? 42
+        : 42 + Math.pow((progress - 0.55) / 0.45, 2.4) * 420;
+
+      setTimeout(tick, delay);
+    }
+    setTimeout(tick, 40);
+  }
+
+  // ── Login ─────────────────────────────────────
+  function startCountdown(seconds) {
+    if (countdownTimer) clearInterval(countdownTimer);
+    let rem = seconds;
+    loginBtn.disabled = true;
+    function tick() {
+      if (rem <= 0) { clearInterval(countdownTimer); loginBtn.disabled = false; clearMsg(loginMsg); return; }
+      const m = Math.floor(rem / 60), s = rem % 60;
+      showMsg(loginMsg, `Too many attempts. Try again in ${m}m ${s < 10 ? "0" : ""}${s}s.`, "error");
+      rem--;
+    }
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
+
+  async function doLogin() {
+    clearMsg(loginMsg);
+    const name = nameSelect.value;
+    const pin  = pinInput.value.trim();
+    if (!name) { showMsg(loginMsg, "Please select your name.", "error"); return; }
+    if (!pin)  { showMsg(loginMsg, "Please enter your PIN.", "error"); return; }
+
+    loginBtn.disabled = true;
+    try {
+      const res  = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, pin })
       });
-    }
+      const data = await res.json().catch(() => ({}));
 
-    async function loadMe() {
-      const res = await fetch("/me");
-      if (!res.ok) throw new Error("not authed");
+      if (res.ok) {
+        pinInput.value = "";
+        await afterLogin();
+        return;
+      }
+      if (res.status === 429 && data.seconds_remaining) { startCountdown(data.seconds_remaining); return; }
+      let m = data.error || "Sign in failed.";
+      if (typeof data.attempts_remaining === "number") m += ` ${data.attempts_remaining} attempt(s) left.`;
+      showMsg(loginMsg, m, "error");
+    } catch (e) {
+      showMsg(loginMsg, "Network error. Please try again.", "error");
+    } finally {
+      if (!loginMsg.textContent.includes("Try again in")) loginBtn.disabled = false;
+    }
+  }
+
+  // After successful login: fetch /me, set up wheel, go to spin view
+  async function afterLogin() {
+    const res = await fetch("/me");
+    if (!res.ok) { showMsg(loginMsg, "Session error. Please try again.", "error"); return; }
+    gifteeData = await res.json();
+
+    // One spin only: anyone who already revealed goes straight to the dashboard
+    if (gifteeData.revealed) { showDashboard(); return; }
+
+    // Populate reel with all names
+    allNames = [];
+    document.querySelectorAll("#nameSelect option").forEach(o => { if (o.value) allNames.push(o.value); });
+    currentIndex = Math.floor(Math.random() * allNames.length);
+    updateReel(currentIndex);
+
+    spinGreeting.textContent = "Hi " + gifteeData.name + "! 🎄";
+    spinBtn.textContent = "Spin! 🎲";
+    spinBtn.disabled    = false;
+    spinBtn.classList.remove("hidden");
+    continueBtn.classList.add("hidden");
+    revealMsg.textContent = "";
+    hasRevealed = false;
+
+    showView(spinView);
+  }
+
+  // ── Continue to dashboard ─────────────────────
+  function showDashboard() {
+    appGreeting.textContent  = "Hi " + gifteeData.name + "! 🎄";
+    gifteeName.textContent   = gifteeData.giftee || "—";
+    ownWishlist.value        = gifteeData.own_wishlist || "";
+    renderWishlist(gifteeData.giftee_wishlist);
+    showView(appView);
+  }
+
+  // ── Link preview cards ────────────────────────
+  async function fetchPreview(url) {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(
+        "https://api.microlink.io/?url=" + encodeURIComponent(url),
+        { signal: controller.signal }
+      );
+      clearTimeout(t);
       const data = await res.json();
-      greeting.textContent = "Hi " + data.name + "! 🎄";
-      gifteeName.textContent = data.giftee || "—";
-      linkify(data.giftee_wishlist);
-      ownWishlist.value = data.own_wishlist || "";
-      loginView.classList.add("hidden");
-      appView.classList.remove("hidden");
+      if (data.status === "success") return { title: data.data.title || null, image: data.data.image?.url || null };
+    } catch (e) {}
+    return null;
+  }
+
+  function makeSkeleton() {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="link-skeleton">
+      <div class="skel-img"></div>
+      <div class="skel-lines"><div class="skel-line"></div><div class="skel-line short"></div></div>
+    </div>`;
+    return li;
+  }
+
+  async function renderLinkCard(url, container) {
+    const skel = makeSkeleton();
+    container.appendChild(skel);
+    const preview = await fetchPreview(url);
+    const title   = preview?.title || (url.length > 55 ? url.slice(0, 55) + "…" : url);
+    const li = document.createElement("li");
+    const tid = "tw-" + Math.random().toString(36).slice(2);
+    li.innerHTML = `<div class="link-card">
+      <div class="link-thumb-wrap" id="${tid}">🎁</div>
+      <div class="link-info">
+        <div class="link-title">${title.replace(/</g,"&lt;")}</div>
+        <a class="link-open" href="${url}" target="_blank" rel="noopener noreferrer">View Item →</a>
+      </div>
+    </div>`;
+    if (preview?.image) {
+      const wrap = li.querySelector("#" + tid);
+      const img  = document.createElement("img");
+      img.alt    = "";
+      img.onload  = () => { wrap.textContent = ""; wrap.appendChild(img); };
+      img.src = preview.image;
     }
+    container.replaceChild(li, skel);
+  }
 
-    function startCountdown(seconds) {
-      if (countdownTimer) clearInterval(countdownTimer);
-      let remaining = seconds;
-      loginBtn.disabled = true;
-      function tick() {
-        if (remaining <= 0) {
-          clearInterval(countdownTimer);
-          loginBtn.disabled = false;
-          clearMsg(loginMsg);
-          return;
-        }
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        showMsg(loginMsg, "Too many attempts. Try again in " + m + "m " + (s < 10 ? "0" : "") + s + "s.", "error");
-        remaining--;
-      }
-      tick();
-      countdownTimer = setInterval(tick, 1000);
+  async function renderWishlist(text) {
+    gifteeWishlist.innerHTML = "";
+    const lines = (text || "").split("\n").map(l => l.trim()).filter(Boolean);
+    if (!lines.length) {
+      const li = document.createElement("li");
+      li.className   = "empty";
+      li.textContent = "No gift ideas yet — check back soon! 🎁";
+      gifteeWishlist.appendChild(li);
+      return;
     }
+    await Promise.all(lines.map(line => {
+      if (/^https?:\/\//i.test(line)) return renderLinkCard(line, gifteeWishlist);
+      const li = document.createElement("li");
+      li.className   = "link-plain";
+      li.textContent = line;
+      gifteeWishlist.appendChild(li);
+      return Promise.resolve();
+    }));
+  }
 
-    async function doLogin() {
-      clearMsg(loginMsg);
-      const name = nameSelect.value;
-      const pin = pinInput.value.trim();
-      if (!name) { showMsg(loginMsg, "Please select your name.", "error"); return; }
-      if (!/^\d{4}$/.test(pin)) { showMsg(loginMsg, "PIN must be 4 digits.", "error"); return; }
+  // ── Save wishlist ─────────────────────────────
+  async function saveWishlist() {
+    clearMsg(saveMsg);
+    saveBtn.disabled = true;
+    try {
+      const res = await fetch("/me/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wishlist: ownWishlist.value })
+      });
+      if (res.ok)              showMsg(saveMsg, "Saved! Your Secret Santa can see it. 🎁", "success");
+      else if (res.status === 401) showMsg(saveMsg, "Session expired — please reload and sign in again.", "error");
+      else                     showMsg(saveMsg, "Could not save. Please try again.", "error");
+    } catch (e) { showMsg(saveMsg, "Network error. Please try again.", "error"); }
+    finally     { saveBtn.disabled = false; }
+  }
 
-      loginBtn.disabled = true;
-      try {
-        const res = await fetch("/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: name, pin: pin })
-        });
-        const data = await res.json().catch(function () { return {}; });
+  // ── Events ────────────────────────────────────
+  loginBtn.addEventListener("click", doLogin);
+  pinInput.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  spinBtn.addEventListener("click", startSpin);
+  continueBtn.addEventListener("click", showDashboard);
+  saveBtn.addEventListener("click", saveWishlist);
 
-        if (res.ok) {
-          pinInput.value = "";
-          await loadMe();
-          return;
-        }
-        if (res.status === 429 && data.seconds_remaining) {
-          startCountdown(data.seconds_remaining);
-          return;
-        }
-        let m = data.error || "Sign in failed.";
-        if (typeof data.attempts_remaining === "number") {
-          m += " " + data.attempts_remaining + " attempt(s) left.";
-        }
-        showMsg(loginMsg, m, "error");
-      } catch (e) {
-        showMsg(loginMsg, "Network error. Please try again.", "error");
-      } finally {
-        if (!loginBtn.disabled || loginMsg.textContent.indexOf("Try again in") === -1) {
-          loginBtn.disabled = false;
-        }
-      }
-    }
-
-    async function saveWishlist() {
-      clearMsg(saveMsg);
-      saveBtn.disabled = true;
-      try {
-        const res = await fetch("/me/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wishlist: ownWishlist.value })
-        });
-        if (res.ok) {
-          showMsg(saveMsg, "Saved! Your Secret Santa can see it. 🎁", "success");
-        } else if (res.status === 401) {
-          showMsg(saveMsg, "Session expired. Please reload and sign in again.", "error");
-        } else {
-          showMsg(saveMsg, "Could not save. Please try again.", "error");
-        }
-      } catch (e) {
-        showMsg(saveMsg, "Network error. Please try again.", "error");
-      } finally {
-        saveBtn.disabled = false;
-      }
-    }
-
-    loginBtn.addEventListener("click", doLogin);
-    pinInput.addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
-    saveBtn.addEventListener("click", saveWishlist);
-
-    loadNames();
-    // If already logged in (session cookie), jump straight to app view.
-    fetch("/me").then(function (r) { if (r.ok) return loadMe(); });
-  </script>
+  // ── Init ──────────────────────────────────────
+  loadNames();
+  // If already logged in via session cookie, skip login and go straight to spin view
+  fetch("/me").then(async r => { if (r.ok) { await afterLogin(); } });
+</script>
 </body>
 </html>

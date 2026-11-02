@@ -4,3 +4,4 @@ __pycache__/
 schrock_santa.db
 venv/
 server.log
+.abacus.donotdelete
