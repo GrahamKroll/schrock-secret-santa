@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+schrock_santa.db
+venv/
+server.log

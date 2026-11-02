@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schrock Secret Santa 🎅</title>
+  <style>
+    :root {
+      --green: #0b4d2c;
+      --green-dark: #063019;
+      --green-light: #146b3a;
+      --red: #c1121f;
+      --red-dark: #8b0e17;
+      --gold: #f3c969;
+      --gold-bright: #ffd97d;
+      --cream: #fff8ee;
+      --text: #f4efe6;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #0f5a33 0%, var(--green-dark) 70%);
+      color: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 60px;
+    }
+    .wrap { width: 100%; max-width: 560px; }
+    .card {
+      background: linear-gradient(160deg, rgba(11,77,44,0.96), rgba(6,48,25,0.98));
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 8px;
+      background: repeating-linear-gradient(45deg, var(--red) 0 16px, var(--cream) 16px 32px);
+      opacity: 0.9;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.9rem;
+      margin: 10px 0 4px;
+      color: var(--gold-bright);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .subtitle { text-align: center; color: #d8ead9; margin: 0 0 22px; font-size: 0.95rem; }
+    label { display: block; font-weight: 600; margin: 16px 0 6px; color: var(--gold-bright); }
+    select, input[type="password"], textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--green-light);
+      background: var(--cream);
+      color: #14281d;
+      font-size: 1rem;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(243,201,105,0.35);
+    }
+    textarea { min-height: 120px; resize: vertical; font-family: inherit; }
+    .hint { font-size: 0.82rem; color: #c7dcc9; margin-top: 6px; }
+    button {
+      width: 100%;
+      margin-top: 20px;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--red), var(--red-dark));
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: transform 0.05s ease, filter 0.15s ease;
+    }
+    button:hover { filter: brightness(1.08); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .msg { margin-top: 14px; padding: 10px 12px; border-radius: 9px; font-size: 0.92rem; display: none; }
+    .msg.error { display: block; background: rgba(193,18,31,0.18); border: 1px solid var(--red); color: #ffd7da; }
+    .msg.success { display: block; background: rgba(20,107,58,0.3); border: 1px solid var(--gold); color: var(--gold-bright); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .logout { color: var(--gold-bright); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+    .logout:hover { text-decoration: underline; }
+    .section {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(243,201,105,0.35);
+    }
+    .section h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--gold-bright); }
+    .giftee-name { color: #fff; }
+    .wishlinks { list-style: none; padding: 0; margin: 0; }
+    .wishlinks li { margin: 8px 0; }
+    .wishlinks a {
+      color: var(--gold-bright);
+      text-decoration: none;
+      word-break: break-all;
+      border-bottom: 1px dotted var(--gold);
+    }
+    .wishlinks a:hover { color: #fff; }
+    .wishlinks .plain { color: #e8f3e9; }
+    .empty { color: #cfe3d1; font-style: italic; }
+    .hidden { display: none; }
+    .flake { position: fixed; top: -10px; color: #fff; opacity: 0.25; pointer-events: none; animation: fall linear infinite; }
+    @keyframes fall { to { transform: translateY(105vh); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <!-- State 1: Login -->
+      <div id="loginView">
+        <h1>Schrock Secret Santa 🎅</h1>
+        <p class="subtitle">Sign in to see who you're buying for 🎁</p>
+
+        <label for="nameSelect">Who are you?</label>
+        <select id="nameSelect">
+          <option value="">Loading…</option>
+        </select>
+
+        <label for="pinInput">Your PIN</label>
+        <input id="pinInput" type="password" maxlength="4" inputmode="numeric"
+               autocomplete="off" placeholder="••••" />
+        <p class="hint">First time? Pick any 4-digit PIN — you'll use it to come back.</p>
+
+        <button id="loginBtn">Sign In</button>
+        <div id="loginMsg" class="msg"></div>
+      </div>
+
+      <!-- State 2: Logged in -->
+      <div id="appView" class="hidden">
+        <div class="topbar">
+          <h1 id="greeting" style="font-size:1.5rem;margin:0;text-align:left;">Hi! 🎄</h1>
+          <a class="logout" href="/logout">Log out</a>
+        </div>
+
+        <div class="section">
+          <h2>You're buying for <span class="giftee-name" id="gifteeName"></span></h2>
+          <ul class="wishlinks" id="gifteeWishlist"></ul>
+        </div>
+
+        <div class="section">
+          <h2>Your Wish List</h2>
+          <p class="hint" style="margin-top:-6px;">Your Secret Santa sees this. One link (or idea) per line.</p>
+          <textarea id="ownWishlist" placeholder="https://example.com/thing-i-want&#10;Another idea…"></textarea>
+          <button id="saveBtn">Save Wish List</button>
+          <div id="saveMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Decorative snowflakes
+    (function () {
+      const flakes = ["❄", "❅", "❆", "*"];
+      for (let i = 0; i < 18; i++) {
+        const s = document.createElement("div");
+        s.className = "flake";
+        s.textContent = flakes[Math.floor(Math.random() * flakes.length)];
+        s.style.left = Math.random() * 100 + "vw";
+        s.style.fontSize = (10 + Math.random() * 18) + "px";
+        s.style.animationDuration = (6 + Math.random() * 9) + "s";
+        s.style.animationDelay = (Math.random() * 8) + "s";
+        document.body.appendChild(s);
+      }
+    })();
+
+    const loginView = document.getElementById("loginView");
+    const appView = document.getElementById("appView");
+    const nameSelect = document.getElementById("nameSelect");
+    const pinInput = document.getElementById("pinInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMsg = document.getElementById("loginMsg");
+    const greeting = document.getElementById("greeting");
+    const gifteeName = document.getElementById("gifteeName");
+    const gifteeWishlist = document.getElementById("gifteeWishlist");
+    const ownWishlist = document.getElementById("ownWishlist");
+    const saveBtn = document.getElementById("saveBtn");
+    const saveMsg = document.getElementById("saveMsg");
+
+    let countdownTimer = null;
+
+    function showMsg(el, text, kind) {
+      el.textContent = text;
+      el.className = "msg " + kind;
+    }
+    function clearMsg(el) {
+      el.textContent = "";
+      el.className = "msg";
+    }
+
+    async function loadNames() {
+      try {
+        const res = await fetch("/names");
+        const list = await res.json();
+        nameSelect.innerHTML = '<option value="">Select your name…</option>';
+        list.forEach(function (n) {
+          const opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = n;
+          nameSelect.appendChild(opt);
+        });
+      } catch (e) {
+        nameSelect.innerHTML = '<option value="">Could not load names</option>';
+      }
+    }
+
+    function linkify(text) {
+      gifteeWishlist.innerHTML = "";
+      const lines = (text || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+      if (lines.length === 0) {
+        const li = document.createElement("li");
+        li.className = "empty";
+        li.textContent = "No gift ideas yet — check back soon! 🎁";
+        gifteeWishlist.appendChild(li);
+        return;
+      }
+      lines.forEach(function (line) {
+        const li = document.createElement("li");
+        if (/^https?:\/\//i.test(line)) {
+          const a = document.createElement("a");
+          a.href = line;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = line.length > 50 ? line.slice(0, 50) + "…" : line;
+          li.appendChild(a);
+        } else {
+          const span = document.createElement("span");
+          span.className = "plain";
+          span.textContent = line;
+          li.appendChild(span);
+        }
+        gifteeWishlist.appendChild(li);
+      });
+    }
+
+    async function loadMe() {
+      const res = await fetch("/me");
+      if (!res.ok) throw new Error("not authed");
+      const data = await res.json();
+      greeting.textContent = "Hi " + data.name + "! 🎄";
+      gifteeName.textContent = data.giftee || "—";
+      linkify(data.giftee_wishlist);
+      ownWishlist.value = data.own_wishlist || "";
+      loginView.classList.add("hidden");
+      appView.classList.remove("hidden");
+    }
+
+    function startCountdown(seconds) {
+      if (countdownTimer) clearInterval(countdownTimer);
+      let remaining = seconds;
+      loginBtn.disabled = true;
+      function tick() {
+        if (remaining <= 0) {
+          clearInterval(countdownTimer);
+          loginBtn.disabled = false;
+          clearMsg(loginMsg);
+          return;
+        }
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        showMsg(loginMsg, "Too many attempts. Try again in " + m + "m " + (s < 10 ? "0" : "") + s + "s.", "error");
+        remaining--;
+      }
+      tick();
+      countdownTimer = setInterval(tick, 1000);
+    }
+
+    async function doLogin() {
+      clearMsg(loginMsg);
+      const name = nameSelect.value;
+      const pin = pinInput.value.trim();
+      if (!name) { showMsg(loginMsg, "Please select your name.", "error"); return; }
+      if (!/^\d{4}$/.test(pin)) { showMsg(loginMsg, "PIN must be 4 digits.", "error"); return; }
+
+      loginBtn.disabled = true;
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, pin: pin })
+        });
+        const data = await res.json().catch(function () { return {}; });
+
+        if (res.ok) {
+          pinInput.value = "";
+          await loadMe();
+          return;
+        }
+        if (res.status === 429 && data.seconds_remaining) {
+          startCountdown(data.seconds_remaining);
+          return;
+        }
+        let m = data.error || "Sign in failed.";
+        if (typeof data.attempts_remaining === "number") {
+          m += " " + data.attempts_remaining + " attempt(s) left.";
+        }
+        showMsg(loginMsg, m, "error");
+      } catch (e) {
+        showMsg(loginMsg, "Network error. Please try again.", "error");
+      } finally {
+        if (!loginBtn.disabled || loginMsg.textContent.indexOf("Try again in") === -1) {
+          loginBtn.disabled = false;
+        }
+      }
+    }
+
+    async function saveWishlist() {
+      clearMsg(saveMsg);
+      saveBtn.disabled = true;
+      try {
+        const res = await fetch("/me/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ wishlist: ownWishlist.value })
+        });
+        if (res.ok) {
+          showMsg(saveMsg, "Saved! Your Secret Santa can see it. 🎁", "success");
+        } else if (res.status === 401) {
+          showMsg(saveMsg, "Session expired. Please reload and sign in again.", "error");
+        } else {
+          showMsg(saveMsg, "Could not save. Please try again.", "error");
+        }
+      } catch (e) {
+        showMsg(saveMsg, "Network error. Please try again.", "error");
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+    pinInput.addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+    saveBtn.addEventListener("click", saveWishlist);
+
+    loadNames();
+    // If already logged in (session cookie), jump straight to app view.
+    fetch("/me").then(function (r) { if (r.ok) return loadMe(); });
+  </script>
+</body>
+</html>
